@@ -9,3 +9,7 @@ sudo pip install mmh3
 
 
 There are many possible hashing function available. However, the murmurhashing is more computationally efficient and has less collision.
+To run the code
+navigate to src folder and write  on the terminal 
+
+python work.py
