@@ -7,7 +7,10 @@ from collections import Counter
 from collections import defaultdict
 import urllib
 import ast
+import string
+from sets import Set
 
+STRIP_WORDS = Set(['a', 'an', 'and', 'by', 'for', 'from', 'in', 'no', 'not', 'of', 'on', 'or', 'that', 'the', 'to', 'with', 'as', 'at', 'but', 'into', 'like', 'off', 'onto', 'up', 'via'])
 
 def getHash(word):
 	'''
@@ -16,6 +19,26 @@ def getHash(word):
 	curHash = mmh3.hash(word)
 	curHash = curHash & 0xffffffffL
 	return curHash
+
+
+def removePunctuation(str):
+	'''
+		remove punctuation using efficient method
+	'''
+	table = string.maketrans("","")
+	str.translate(table, string.punctuation)
+	return str
+
+
+
+
+def removeStopWord(list, stopwordList):
+	for i, (d, q) in enumerate(list):
+		currentValSet = Set([d])
+		remainingSet = currentValSet & stopwordList
+		if len(remainingSet) > 0:
+			del(list[i])
+
 
 '''
 def similaritySignature(word):
@@ -38,7 +61,10 @@ def similaritySignature(sentence):
 	'''
 		This done using the locality sensitive hashing
 	'''
+	sentence = sentence.lower()
+	sentence = removePunctuation(sentence) #remove punctuation
 	myList = Counter(sentence.split()).most_common() #word frenquency dictionary
+	removeStopWord(myList, STRIP_WORDS) #remove stop words
 	key, value = myList[0]
 	concatStr = key + str(value)
 	curHash = getHash(concatStr)
@@ -77,7 +103,7 @@ def getProductNameWithSignature(filename):
 		prodName = obj["product_name"]
 		prodManufacturer = obj["manufacturer"]
 		neededString = prodName +" "+ prodManufacturer 
-		#neededString = prodName 
+		#neededString = cleanTitle(prodName )
 		hashValue = similaritySignature(neededString)
 		totalData[hashValue] = prodName
 	return totalData
@@ -92,7 +118,7 @@ def getTitleWithSignature(filename):
 		prodTitle = obj["title"]
 		prodManufacturer = obj["manufacturer"]
 		neededString = prodTitle +" "+ prodManufacturer 
-		#neededString = prodTitle 
+		#neededString = cleanTitle(prodTitle)
 		hashValue = similaritySignature(neededString)
 		totalData[hashValue].append(obj)
 	return totalData
@@ -117,22 +143,25 @@ def combineData(prodFile, listFile ):
 
 
 
+
 def writeToFile():
 	prodFile = "products.txt"
 	listFile = "listings.txt"
 	data = combineData(prodFile, listFile )
 
+
 	#for item in data:
 	#	with open('output.txt', 'w') as f:
 	#		f.write("%s\n" % json.dumps(item))
 
-	with open('output.txt', 'w') as f:
-		f.write("%s\n" % json.dumps(data))
-
+	for item in data:
+		with open('output.txt', 'a') as f:
+			f.write("%s\n" % json.dumps(item))
 
 if __name__ == "__main__":
     #print (getHash("two.py is being run directly"))
     writeToFile()
+
 
 
 
